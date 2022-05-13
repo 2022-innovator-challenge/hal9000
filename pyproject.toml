@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "hal9000"
+version = "0.1.0"
+description = ""
+authors = ["Florian Richter <florian.richter@sap.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+spacy = "^3.3.0"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
+black = "^22.3.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
