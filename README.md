@@ -15,3 +15,11 @@ pip install -U pip
 poetry install
 poetry run python -m spacy download en_core_web_trf
 ```
+
+### Format & Lint
+
+```
+poetry run black .
+poetry run pyright
+poetry run prospector
+```
