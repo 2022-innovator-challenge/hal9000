@@ -4,6 +4,9 @@ version = "0.1.0"
 description = ""
 authors = ["Florian Richter <florian.richter@sap.com>"]
 
+[tool.poetry.scripts]
+hal9000 = "hal9000.run:main"
+
 [tool.poetry.dependencies]
 python = "^3.10"
 spacy = {extras = ["apple"], version = "^3.3.0"}
