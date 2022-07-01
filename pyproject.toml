@@ -11,6 +11,9 @@ hal9000 = "hal9000.run:main"
 python = "^3.10"
 spacy = {extras = ["apple"], version = "^3.3.0"}
 requests = "^2.27.1"
+beautifulsoup4 = "^4.11.1"
+Markdown = "^3.3.7"
+sense2vec = "^2.0.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

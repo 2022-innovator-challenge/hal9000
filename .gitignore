@@ -2,3 +2,5 @@ __pycache__
 .envrc
 .venv
 issues.json
+comments.json
+/vectors
