@@ -1,15 +1,30 @@
 import os
 import json
 import sys
+from pprint import pprint
 from time import sleep
-from typing import Any
+from typing import Any, Callable
 import requests
 
-token = os.getenv("GITHUB_TOKEN")
+# token = os.getenv("GITHUB_TOKEN")
+token = os.getenv("GH_COM_TOKEN")
 BASE_URL = "https://api.github.com"
 
 
-def get(url: str) -> Any:
+def get_items(x: dict[str, Any]):
+    return x["items"]
+
+
+def identity(x: Any):
+    return x
+
+
+def get(
+    url: str,
+    accessor: Callable[[Any], Any] = identity,
+    sleep_between_requests: int = 1,
+    retry_counter: int = 0,
+) -> Any:
     if url == "":
         print("Called with empty URL. Something bad happened!")
         return []
@@ -17,13 +32,28 @@ def get(url: str) -> Any:
     if "-v" in sys.argv:
         print(f"Getting data from {url}")
     res = requests.get(url, headers={"Authorization": f"token {token}"})
+    if res.status_code >= 400:
+        if retry_counter < 3:
+            print(f"Retrying after {sleep_between_requests * 10} seconds")
+            sleep(sleep_between_requests * 10)
+            return get(url, accessor, sleep_between_requests, retry_counter + 1)
+        else:
+            print(f"Getting data from {url} returned error code {res.status_code}")
+            pprint(res.json())
     if res.links.get("next"):
-        if int(res.headers.get("X-RateLimit-Remaining", "0")) < 5:
+        sleep(sleep_between_requests)
+        if int(res.headers.get("X-RateLimit-Remaining", 0)) < 5:
             if "-v" in sys.argv:
                 print("Rate limit is getting close...")
             sleep(5)
-        return res.json() + get(res.links.get("next", {}).get("url", ""))
-    return res.json()
+        return accessor(res.json()) + get(
+            res.links.get("next", {}).get("url", ""), accessor, sleep_between_requests
+        )
+    return accessor(res.json())
+
+
+def search_code(query: str):
+    return get(f"{BASE_URL}/search/code?q={query}&per_page=100", get_items, 10)
 
 
 def get_issue(owner: str, repo: str, number: str) -> dict[str, Any]:
@@ -32,7 +62,7 @@ def get_issue(owner: str, repo: str, number: str) -> dict[str, Any]:
 
 def get_issues(owner: str, repo: str) -> list[dict[str, Any]]:
     try:
-        with open("issues.json", "r") as issue_file:
+        with open("issues.json", "r", encoding="utf8") as issue_file:
             issues = json.load(issue_file)
             if len(issues):
                 if "-v" in sys.argv:
@@ -40,7 +70,7 @@ def get_issues(owner: str, repo: str) -> list[dict[str, Any]]:
                     print(len(issues))
                 # TODO load new items from API
                 return issues
-    except:
+    except FileNotFoundError:
         print("Error opening `issues.json`. File not present?")
 
     issues = get(f"{BASE_URL}/repos/{owner}/{repo}/issues?state=all&per_page=100")
@@ -48,7 +78,7 @@ def get_issues(owner: str, repo: str) -> list[dict[str, Any]]:
     if "-v" in sys.argv:
         print("Issues loaded from API")
 
-    with open("issues.json", "w") as issue_file:
+    with open("issues.json", "w", encoding="utf8") as issue_file:
         json.dump(issues, issue_file, indent=2)
         if "-v" in sys.argv:
             print("Issues saved to file")

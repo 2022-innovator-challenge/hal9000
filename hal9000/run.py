@@ -1,8 +1,9 @@
-# from pprint import pprint
+from pprint import pprint
 from timeit import default_timer
 import sys
+import json
 from typing import Any
-from hal9000.github import get_comments, get_issue, get_issues
+from hal9000.github import get_comments, get_issue, get_issues, search_code
 from hal9000.nlp import print_similarity, run_nlp
 
 
@@ -25,25 +26,31 @@ def print_time(step: str, since: float):
 
 
 def main():
-    time = default_timer()
+    if str(sys.argv[1]) == "sdk":
+        results = search_code("sap-cloud-sdk")
+        with open("code_search.json", "w") as search_file:
+            json.dump(results, search_file, indent=2)
+            print("Search results saved to file")
+    else:
+        time = default_timer()
 
-    issues = [
-        issue
-        for issue in get_issues("SAP", "cloud-sdk-js")
-        if not "pull_request" in issue.keys()
-    ]
-    base_issue = get_issue("SAP", "cloud-sdk-js", str(sys.argv[1]))
+        issues = [
+            issue
+            for issue in get_issues("SAP", "cloud-sdk-js")
+            if "pull_request" not in issue.keys()
+        ]
+        base_issue = get_issue("SAP", "cloud-sdk-js", str(sys.argv[1]))
 
-    attach_comments(issues + [base_issue], get_comments("SAP", "cloud-sdk-js"))
+        attach_comments(issues + [base_issue], get_comments("SAP", "cloud-sdk-js"))
 
-    time = print_time("Loaded", time)
+        time = print_time("Loaded", time)
 
-    docs = run_nlp(base_issue, issues)
+        docs = run_nlp(base_issue, issues)
 
-    time = print_time("NLP", time)
+        time = print_time("NLP", time)
 
-    print_similarity(docs)
+        print_similarity(docs)
 
-    time = print_time("Similarity", time)
+        time = print_time("Similarity", time)
 
-    # pprint(issues[0])
+        pprint(issues[0])
