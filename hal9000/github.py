@@ -5,14 +5,30 @@ from pprint import pprint
 from time import sleep
 from typing import Any, Callable
 import requests
+from requests.auth import HTTPBasicAuth
 
-# token = os.getenv("GITHUB_TOKEN")
-token = os.getenv("GH_COM_TOKEN")
-BASE_URL = "https://api.github.com"
+user = os.getenv("GH_WDF_USER")
+# user = os.getenv("GH_TOOLS_USER")
+# user = os.getenv("GH_COM_USER")
+token = os.getenv("GH_WDF_TOKEN")
+# token = os.getenv("GH_TOOLS_TOKEN")
+# token = os.getenv("GH_COM_TOKEN")
+BASE_URL = "https://github.wdf.sap.corp/api/v3"
+# BASE_URL = "https://github.tools.sap/api/v3"
+# BASE_URL = "https://api.github.com"
+basic = HTTPBasicAuth(user, token)
 
 
 def get_items(x: dict[str, Any]):
     return x["items"]
+
+
+def get_login(contributors: list[dict[str, Any]]):
+    return [contributor["login"] for contributor in contributors]
+
+
+def get_commit(commits: list[dict[str, Any]]):
+    return [commit["commit"] for commit in commits]
 
 
 def identity(x: Any):
@@ -24,6 +40,7 @@ def get(
     accessor: Callable[[Any], Any] = identity,
     sleep_between_requests: int = 1,
     retry_counter: int = 0,
+    load_next: bool = True,
 ) -> Any:
     if url == "":
         print("Called with empty URL. Something bad happened!")
@@ -31,7 +48,8 @@ def get(
 
     if "-v" in sys.argv:
         print(f"Getting data from {url}")
-    res = requests.get(url, headers={"Authorization": f"token {token}"})
+    # res = requests.get(url, headers={"Authorization": f"token {token}"}, verify=False)
+    res = requests.get(url, auth=basic, verify=False)
     if res.status_code >= 400:
         if retry_counter < 3:
             print(f"Retrying after {sleep_between_requests * 10} seconds")
@@ -40,7 +58,7 @@ def get(
         else:
             print(f"Getting data from {url} returned error code {res.status_code}")
             pprint(res.json())
-    if res.links.get("next"):
+    if res.links.get("next") and load_next:
         sleep(sleep_between_requests)
         if int(res.headers.get("X-RateLimit-Remaining", 0)) < 5:
             if "-v" in sys.argv:
@@ -50,6 +68,40 @@ def get(
             res.links.get("next", {}).get("url", ""), accessor, sleep_between_requests
         )
     return accessor(res.json())
+
+
+def last_commit(owner: str, repo: str) -> list[Any]:
+    try:
+        result = get(
+            f"{BASE_URL}/repos/{owner}/{repo}/commits", get_commit, load_next=False
+        )
+        if "-vv" in sys.argv:
+            pprint(result)
+        return result
+    except:
+        return []
+
+
+def committers(owner: str, repo: str) -> list[Any]:
+    try:
+        result = get(
+            f"{BASE_URL}/repos/{owner}/{repo}/contributors", get_login, load_next=False
+        )
+        if "-vv" in sys.argv:
+            pprint(result)
+        return result
+    except:
+        return []
+
+
+def languages(owner: str, repo: str) -> dict[str, Any]:
+    try:
+        result = get(f"{BASE_URL}/repos/{owner}/{repo}/languages", load_next=False)
+        if "-vv" in sys.argv:
+            pprint(result)
+        return result
+    except:
+        return {}
 
 
 def search_code(query: str):

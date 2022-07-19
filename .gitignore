@@ -3,4 +3,5 @@ __pycache__
 .venv
 issues.json
 comments.json
+code_search*.json
 /vectors
