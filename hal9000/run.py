@@ -36,10 +36,11 @@ def print_time(step: str, since: float):
 
 
 def format_repo(repository: Any) -> dict[str, Any]:
-    sleep(1)
+    sleep(0.1)
     owner = repository["owner"]["login"]
     repo = repository["name"]
-    print(f"Loading data for {owner}/{repo}")
+    if "-v" in sys.argv:
+        print(f"Loading data for {owner}/{repo}")
     return {
         "repository": repository,
         "last_commit": last_commit(owner, repo),
@@ -56,7 +57,9 @@ def main():
         except FileNotFoundError:
             results = [
                 format_repo(result["repository"])
-                for result in search_code("sap-cloud-sdk filename=package.json")
+                for result in search_code(
+                    "sap-cloud-sdk+filename:package.json+-org:cloudsdk"
+                )
             ]
 
         if "--save" in sys.argv:

@@ -28,7 +28,15 @@ def get_login(contributors: list[dict[str, Any]]):
 
 
 def get_commit(commits: list[dict[str, Any]]):
-    return [commit["commit"] for commit in commits]
+    return [
+        {
+            "author": c["commit"]["author"]["name"],
+            "email": c["commit"]["author"]["email"],
+            "date": c["commit"]["author"]["date"],
+            "message": c["commit"]["message"],
+        }
+        for c in commits
+    ]
 
 
 def identity(x: Any):
@@ -40,6 +48,8 @@ def get(
     accessor: Callable[[Any], Any] = identity,
     sleep_between_requests: int = 1,
     retry_counter: int = 0,
+    next_counter: int = 0,
+    next_limit: int = 100,
     load_next: bool = True,
 ) -> Any:
     if url == "":
@@ -58,7 +68,7 @@ def get(
         else:
             print(f"Getting data from {url} returned error code {res.status_code}")
             pprint(res.json())
-    if res.links.get("next") and load_next:
+    if res.links.get("next") and load_next and next_counter < next_limit:
         sleep(sleep_between_requests)
         if int(res.headers.get("X-RateLimit-Remaining", 0)) < 5:
             if "-v" in sys.argv:
@@ -68,13 +78,17 @@ def get(
             res.links.get("next", {}).get("url", ""),
             accessor,
             sleep_between_requests,
+            next_limit=next_limit,
+            next_counter=next_counter + 1,
         )
     return accessor(res.json())
 
 
 def last_commit(owner: str, repo: str) -> list[Any]:
     try:
-        result = get(f"{api}/repos/{owner}/{repo}/commits", get_commit, load_next=False)
+        result = get(
+            f"{api}/repos/{owner}/{repo}/commits?per_page=100", get_commit, next_limit=5
+        )
         if "-vv" in sys.argv:
             pprint(result)
         return result
@@ -85,7 +99,9 @@ def last_commit(owner: str, repo: str) -> list[Any]:
 def committers(owner: str, repo: str) -> list[Any]:
     try:
         result = get(
-            f"{api}/repos/{owner}/{repo}/contributors", get_login, load_next=False
+            f"{api}/repos/{owner}/{repo}/contributors",
+            get_login,
+            load_next=False,
         )
         if "-vv" in sys.argv:
             pprint(result)

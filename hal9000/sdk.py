@@ -1,5 +1,6 @@
 from typing import Any
 from datetime import datetime, timedelta
+from collections import Counter
 
 
 def get_last_commit_date(commit_list: list[Any]):
@@ -52,9 +53,11 @@ def print_results(results: list[Any]):
     print(f"There are {len(inactive)} inactive repos")
     print()
     print("### Active projects")
-    for result in relevant:
+    for result in sorted(relevant, key=lambda r: r["repository"]["full_name"]):
+        commit_counter = Counter([c["email"] for c in result["last_commit"][:100]])
+
         print(
-            f"- [{result['repository']['full_name']}]({result['repository']['html_url']}) has {len(result['committers'])} committers and uses {' & '.join(result['languages'].keys())}"
+            f"- [{result['repository']['full_name']}]({result['repository']['html_url']}) has {len(result['committers'])} committers ({', '.join([c[0] for c in commit_counter.most_common()[:4]])}), {len(result['last_commit'])} and uses {' & '.join(result['languages'].keys()[:3])}"
         )
     # print()
     # print("### Maintained projects")
