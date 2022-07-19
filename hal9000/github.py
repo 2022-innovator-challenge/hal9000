@@ -7,16 +7,16 @@ from typing import Any, Callable
 import requests
 from requests.auth import HTTPBasicAuth
 
-user = os.getenv("GH_WDF_USER")
-# user = os.getenv("GH_TOOLS_USER")
-# user = os.getenv("GH_COM_USER")
-token = os.getenv("GH_WDF_TOKEN")
-# token = os.getenv("GH_TOOLS_TOKEN")
-# token = os.getenv("GH_COM_TOKEN")
-BASE_URL = "https://github.wdf.sap.corp/api/v3"
-# BASE_URL = "https://github.tools.sap/api/v3"
-# BASE_URL = "https://api.github.com"
-basic = HTTPBasicAuth(user, token)
+BASE_WDF = "https://github.wdf.sap.corp/api/v3"
+BASE_TOOLS = "https://github.tools.sap/api/v3"
+BASE_COM = "https://api.github.com"
+AUTH_WDF = HTTPBasicAuth(os.getenv("GH_WDF_USER"), os.getenv("GH_WDF_TOKEN"))
+AUTH_TOOLS = HTTPBasicAuth(os.getenv("GH_TOOLS_USER"), os.getenv("GH_TOOLS_TOKEN"))
+AUTH_COM = HTTPBasicAuth(os.getenv("GH_COM_USER"), os.getenv("GH_COM_TOKEN"))
+
+api = BASE_WDF
+auth = AUTH_WDF
+verify = False
 
 
 def get_items(x: dict[str, Any]):
@@ -49,7 +49,7 @@ def get(
     if "-v" in sys.argv:
         print(f"Getting data from {url}")
     # res = requests.get(url, headers={"Authorization": f"token {token}"}, verify=False)
-    res = requests.get(url, auth=basic, verify=False)
+    res = requests.get(url, auth=auth, verify=verify)
     if res.status_code >= 400:
         if retry_counter < 3:
             print(f"Retrying after {sleep_between_requests * 10} seconds")
@@ -65,16 +65,16 @@ def get(
                 print("Rate limit is getting close...")
             sleep(5)
         return accessor(res.json()) + get(
-            res.links.get("next", {}).get("url", ""), accessor, sleep_between_requests
+            res.links.get("next", {}).get("url", ""),
+            accessor,
+            sleep_between_requests,
         )
     return accessor(res.json())
 
 
 def last_commit(owner: str, repo: str) -> list[Any]:
     try:
-        result = get(
-            f"{BASE_URL}/repos/{owner}/{repo}/commits", get_commit, load_next=False
-        )
+        result = get(f"{api}/repos/{owner}/{repo}/commits", get_commit, load_next=False)
         if "-vv" in sys.argv:
             pprint(result)
         return result
@@ -85,7 +85,7 @@ def last_commit(owner: str, repo: str) -> list[Any]:
 def committers(owner: str, repo: str) -> list[Any]:
     try:
         result = get(
-            f"{BASE_URL}/repos/{owner}/{repo}/contributors", get_login, load_next=False
+            f"{api}/repos/{owner}/{repo}/contributors", get_login, load_next=False
         )
         if "-vv" in sys.argv:
             pprint(result)
@@ -96,7 +96,7 @@ def committers(owner: str, repo: str) -> list[Any]:
 
 def languages(owner: str, repo: str) -> dict[str, Any]:
     try:
-        result = get(f"{BASE_URL}/repos/{owner}/{repo}/languages", load_next=False)
+        result = get(f"{api}/repos/{owner}/{repo}/languages", load_next=False)
         if "-vv" in sys.argv:
             pprint(result)
         return result
@@ -105,11 +105,11 @@ def languages(owner: str, repo: str) -> dict[str, Any]:
 
 
 def search_code(query: str):
-    return get(f"{BASE_URL}/search/code?q={query}&per_page=100", get_items, 10)
+    return get(f"{api}/search/code?q={query}&per_page=100", get_items, 10)
 
 
 def get_issue(owner: str, repo: str, number: str) -> dict[str, Any]:
-    return get(f"{BASE_URL}/repos/{owner}/{repo}/issues/{number}")
+    return get(f"{api}/repos/{owner}/{repo}/issues/{number}")
 
 
 def get_issues(owner: str, repo: str) -> list[dict[str, Any]]:
@@ -125,7 +125,7 @@ def get_issues(owner: str, repo: str) -> list[dict[str, Any]]:
     except FileNotFoundError:
         print("Error opening `issues.json`. File not present?")
 
-    issues = get(f"{BASE_URL}/repos/{owner}/{repo}/issues?state=all&per_page=100")
+    issues = get(f"{api}/repos/{owner}/{repo}/issues?state=all&per_page=100")
 
     if "-v" in sys.argv:
         print("Issues loaded from API")
@@ -152,9 +152,7 @@ def get_comments(owner: str, repo: str) -> list[dict[str, Any]]:
     except FileNotFoundError:
         print("Error opening `comments.json`. File not present.")
 
-    comments = get(
-        f"{BASE_URL}/repos/{owner}/{repo}/issues/comments?state=all&per_page=100"
-    )
+    comments = get(f"{api}/repos/{owner}/{repo}/issues/comments?state=all&per_page=100")
     if "-v" in sys.argv:
         print("Comments loaded from API")
         print(len(comments))
