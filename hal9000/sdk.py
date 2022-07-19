@@ -53,12 +53,15 @@ def print_results(results: list[Any]):
     print(f"There are {len(inactive)} inactive repos")
     print()
     print("### Active projects")
-    for result in sorted(relevant, key=lambda r: r["repository"]["full_name"]):
-        commit_counter = Counter([c["email"] for c in result["last_commit"][:100]])
+    for r in sorted(relevant, key=lambda r: r["repository"]["full_name"]):
+        commit_counter = Counter([c["email"] for c in r["last_commit"][:100]])
+        top_committers = ", ".join([c[0] for c in commit_counter.most_common()[:4]])
 
-        print(
-            f"- [{result['repository']['full_name']}]({result['repository']['html_url']}) has {len(result['committers'])} committers ({', '.join([c[0] for c in commit_counter.most_common()[:4]])}), {len(result['last_commit'])} and uses {' & '.join(result['languages'].keys()[:3])}"
-        )
+        print(f"- [{r['repository']['full_name']}]({r['repository']['html_url']})")
+        print(f"  - {len(r['committers'])} committers ({top_committers})")
+        print(f"  - {len(r['last_commit'])} commits")
+        print(f"  - {' & '.join(r['languages'].keys()[:3])} as top 3 languages")
+
     # print()
     # print("### Maintained projects")
     # for result in maintained:
