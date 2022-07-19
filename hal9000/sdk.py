@@ -5,7 +5,7 @@ from collections import Counter
 
 def get_last_commit_date(commit_list: list[Any]):
     try:
-        return datetime.fromisoformat(commit_list[0]["author"]["date"].rstrip("Z"))
+        return datetime.fromisoformat(commit_list[0]["date"].rstrip("Z"))
     except:
         return datetime.min
 
@@ -60,7 +60,7 @@ def print_results(results: list[Any]):
         print(f"- [{r['repository']['full_name']}]({r['repository']['html_url']})")
         print(f"  - {len(r['committers'])} committers ({top_committers})")
         print(f"  - {len(r['last_commit'])} commits")
-        print(f"  - {' & '.join(r['languages'].keys()[:3])} as top 3 languages")
+        print(f"  - {' & '.join(list(r['languages'].keys())[:3])}")
 
     # print()
     # print("### Maintained projects")
