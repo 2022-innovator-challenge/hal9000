@@ -14,13 +14,13 @@ AUTH_WDF = HTTPBasicAuth(os.getenv("GH_WDF_USER"), os.getenv("GH_WDF_TOKEN"))
 AUTH_TOOLS = HTTPBasicAuth(os.getenv("GH_TOOLS_USER"), os.getenv("GH_TOOLS_TOKEN"))
 AUTH_COM = HTTPBasicAuth(os.getenv("GH_COM_USER"), os.getenv("GH_COM_TOKEN"))
 
-api = BASE_WDF
-auth = AUTH_WDF
-verify = False
+API = BASE_WDF
+AUTH = AUTH_WDF
+VERIFY = False
 
 
-def get_items(x: dict[str, Any]):
-    return x["items"]
+def get_items(res: dict[str, Any]):
+    return res["items"]
 
 
 def get_login(contributors: list[dict[str, Any]]):
@@ -39,8 +39,8 @@ def get_commit(commits: list[dict[str, Any]]):
     ]
 
 
-def identity(x: Any):
-    return x
+def identity(res: Any):
+    return res
 
 
 def get(
@@ -59,15 +59,14 @@ def get(
     if "-v" in sys.argv:
         print(f"Getting data from {url}")
     # res = requests.get(url, headers={"Authorization": f"token {token}"}, verify=False)
-    res = requests.get(url, auth=auth, verify=verify)
+    res = requests.get(url, auth=AUTH, verify=VERIFY)
     if res.status_code >= 400:
         if retry_counter < 3:
             print(f"Retrying after {sleep_between_requests * 10} seconds")
             sleep(sleep_between_requests * 10)
             return get(url, accessor, sleep_between_requests, retry_counter + 1)
-        else:
-            print(f"Getting data from {url} returned error code {res.status_code}")
-            pprint(res.json())
+        print(f"Getting data from {url} returned error code {res.status_code}")
+        pprint(res.json())
     if res.links.get("next") and load_next and next_counter < next_limit:
         sleep(sleep_between_requests)
         if int(res.headers.get("X-RateLimit-Remaining", 0)) < 5:
@@ -87,45 +86,21 @@ def get(
 def last_commit(owner: str, repo: str) -> list[Any]:
     try:
         result = get(
-            f"{api}/repos/{owner}/{repo}/commits?per_page=100", get_commit, next_limit=5
+            f"{API}/repos/{owner}/{repo}/commits?per_page=100", get_commit, next_limit=5
         )
         if "-vv" in sys.argv:
             pprint(result)
         return result
     except:
         return []
-
-
-def committers(owner: str, repo: str) -> list[Any]:
-    try:
-        result = get(
-            f"{api}/repos/{owner}/{repo}/contributors",
-            get_login,
-            load_next=False,
-        )
-        if "-vv" in sys.argv:
-            pprint(result)
-        return result
-    except:
-        return []
-
-
-def languages(owner: str, repo: str) -> dict[str, Any]:
-    try:
-        result = get(f"{api}/repos/{owner}/{repo}/languages", load_next=False)
-        if "-vv" in sys.argv:
-            pprint(result)
-        return result
-    except:
-        return {}
 
 
 def search_code(query: str):
-    return get(f"{api}/search/code?q={query}&per_page=100", get_items, 10)
+    return get(f"{API}/search/code?q={query}&per_page=100", get_items, 10)
 
 
 def get_issue(owner: str, repo: str, number: str) -> dict[str, Any]:
-    return get(f"{api}/repos/{owner}/{repo}/issues/{number}")
+    return get(f"{API}/repos/{owner}/{repo}/issues/{number}")
 
 
 def get_issues(owner: str, repo: str) -> list[dict[str, Any]]:
@@ -141,7 +116,7 @@ def get_issues(owner: str, repo: str) -> list[dict[str, Any]]:
     except FileNotFoundError:
         print("Error opening `issues.json`. File not present?")
 
-    issues = get(f"{api}/repos/{owner}/{repo}/issues?state=all&per_page=100")
+    issues = get(f"{API}/repos/{owner}/{repo}/issues?state=all&per_page=100")
 
     if "-v" in sys.argv:
         print("Issues loaded from API")
@@ -168,12 +143,12 @@ def get_comments(owner: str, repo: str) -> list[dict[str, Any]]:
     except FileNotFoundError:
         print("Error opening `comments.json`. File not present.")
 
-    comments = get(f"{api}/repos/{owner}/{repo}/issues/comments?state=all&per_page=100")
+    comments = get(f"{API}/repos/{owner}/{repo}/issues/comments?state=all&per_page=100")
     if "-v" in sys.argv:
         print("Comments loaded from API")
         print(len(comments))
 
-    with open("comments.json", "w") as issue_file:
+    with open("comments.json", "w", encoding="utf8") as issue_file:
         json.dump(comments, issue_file, indent=2)
         if "-v" in sys.argv:
             print("Comments saved to file")

@@ -36,7 +36,7 @@ def run_nlp(base_issue: dict[str, Any], issues: list[Any]) -> Any:
     return [(issue, nlp(get_plain_text(issue))) for issue in [base_issue] + issues]
 
 
-def print_similarity(docs: list[Tuple[dict[str, Any], Doc]]):
+def print_similarity(docs: list[Tuple[dict[str, Any], Doc]]) -> None:
     base_issue, base_doc = docs.pop(0)
 
     top_10 = get_most_similar(docs, base_doc)[:10]
