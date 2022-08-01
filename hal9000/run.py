@@ -1,4 +1,3 @@
-from pprint import pprint
 from timeit import default_timer
 import sys
 from typing import Any
@@ -50,4 +49,4 @@ def main():
 
     time = print_time("Similarity", time)
 
-    pprint(issues[0])
+    # pprint(issues[0])

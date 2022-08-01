@@ -14,9 +14,9 @@ AUTH_WDF = HTTPBasicAuth(os.getenv("GH_WDF_USER"), os.getenv("GH_WDF_TOKEN"))
 AUTH_TOOLS = HTTPBasicAuth(os.getenv("GH_TOOLS_USER"), os.getenv("GH_TOOLS_TOKEN"))
 AUTH_COM = HTTPBasicAuth(os.getenv("GH_COM_USER"), os.getenv("GH_COM_TOKEN"))
 
-API = BASE_WDF
-AUTH = AUTH_WDF
-VERIFY = False
+API = BASE_COM
+AUTH = AUTH_COM
+VERIFY = True
 
 
 def get_items(res: dict[str, Any]):

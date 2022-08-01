@@ -31,7 +31,7 @@ def get_most_similar(docs: list[tuple[Any, Doc]], base_issue_doc: Doc):
 def run_nlp(base_issue: dict[str, Any], issues: list[Any]) -> Any:
     nlp = spacy.load("en_core_web_lg")
     s2v: Any = nlp.add_pipe("sense2vec")
-    s2v.from_disk("vectors/s2v_old")
+    s2v.from_disk("vectors/05_export2")
 
     return [(issue, nlp(get_plain_text(issue))) for issue in [base_issue] + issues]
 
