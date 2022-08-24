@@ -54,13 +54,13 @@ def print_similarity(
     base_issue, base_doc = bd
 
     top_3 = get_most_similar(docs, base_doc)[:3]
-    intro = f"Most similar to {base_issue['title']} {base_issue['number']}"
+    intro = f"### These are the most similar issues to \"{base_issue['title']}\":"
     output = "\n".join(
         [
-            f"  {index+1}. {result_issue['title']} #{result_issue['number']} - Score: {round(result_score, 3)}"
+            f"  - {['🥇','🥈','🥉'][index]} #{result_issue['number']} (Similarity: {round(result_score, 3)*100}%)"
             for index, (result_issue, result_score) in enumerate(top_3)
         ]
     )
 
-    print(intro, output)
+    print(intro, output, "🤖 💬 I hope this was helpful. BEEP BOOP.")
     return intro + "\n" + output
