@@ -1,12 +1,10 @@
-from timeit import default_timer
-import sys
+# from timeit import default_timer
 from typing import Any
 from hal9000.github import (
     get_comments,
-    get_issue,
     get_issues,
 )
-from hal9000.nlp import print_similarity, run_nlp
+from hal9000.nlp import run_nlp_on_list
 
 
 def attach_comments(issues: list[dict[str, Any]], comments: list[dict[str, Any]]):
@@ -19,34 +17,33 @@ def attach_comments(issues: list[dict[str, Any]], comments: list[dict[str, Any]]
         issue["comments"] = related_comments
 
 
-def print_time(step: str, since: float):
-    if "-v" in sys.argv:
-        new_timer = default_timer()
-        print(step, new_timer - since, "seconds")
-        return new_timer
-    return since
+# def print_time(step: str, since: float):
+#     if args.verbose >= 1:
+#         new_timer = default_timer()
+#         print(step, new_timer - since, "seconds")
+#         return new_timer
+#     return since
 
 
-def main():
-    time = default_timer()
+def train(api_type: str, owner: str, repo: str):
+    # time = default_timer()
 
     issues = [
         issue
-        for issue in get_issues("SAP", "cloud-sdk-js")
+        for issue in get_issues(api_type, owner, repo)
         if "pull_request" not in issue.keys()
     ]
-    base_issue = get_issue("SAP", "cloud-sdk-js", str(sys.argv[1]))
 
-    attach_comments(issues + [base_issue], get_comments("SAP", "cloud-sdk-js"))
+    attach_comments(issues, get_comments(api_type, owner, repo))
 
-    time = print_time("Loaded", time)
+    # time = print_time("Loaded", time)
 
-    docs = run_nlp(base_issue, issues)
+    return run_nlp_on_list(issues)
 
-    time = print_time("NLP", time)
+    # time = print_time("NLP", time)
 
-    print_similarity(docs)
+    # print_similarity(docs)
 
-    time = print_time("Similarity", time)
+    # time = print_time("Similarity", time)
 
     # pprint(issues[0])

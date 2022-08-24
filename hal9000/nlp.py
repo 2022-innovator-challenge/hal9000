@@ -1,8 +1,12 @@
-import spacy
-from spacy.tokens import Doc
+# from sense2vec import Sense2VecComponent
 from typing import Any, Tuple
+from spacy.tokens import Doc
 from markdown import markdown
 from bs4 import BeautifulSoup
+
+import spacy
+
+nlp = spacy.load("en_core_web_lg")
 
 
 def get_plain_text(issue: dict[str, Any]):
@@ -12,7 +16,12 @@ def get_plain_text(issue: dict[str, Any]):
                 [
                     issue["title"],
                     issue["body"],
-                    "\n\n".join([comment["body"] for comment in issue["comments"]]),
+                    "\n\n".join(
+                        [
+                            comment.get("body", "")
+                            for comment in issue.get("comments", [])
+                        ]
+                    ),
                 ]
             )
         ),
@@ -28,24 +37,30 @@ def get_most_similar(docs: list[tuple[Any, Doc]], base_issue_doc: Doc):
     )
 
 
-def run_nlp(base_issue: dict[str, Any], issues: list[Any]) -> Any:
-    nlp = spacy.load("en_core_web_lg")
-    s2v: Any = nlp.add_pipe("sense2vec")
-    s2v.from_disk("vectors/05_export2")
-
-    return [(issue, nlp(get_plain_text(issue))) for issue in [base_issue] + issues]
+def run_nlp_on_issue(issue: dict[str, Any]):
+    return (issue, nlp(get_plain_text(issue)))
 
 
-def print_similarity(docs: list[Tuple[dict[str, Any], Doc]]) -> None:
-    base_issue, base_doc = docs.pop(0)
+def run_nlp_on_list(issues: list[Any]) -> Any:
+    # s2v: Any = nlp.add_pipe("sense2vec")
+    # s2v.from_disk("vectors/05_export2")
 
-    top_10 = get_most_similar(docs, base_doc)[:10]
-    print("Most similar to", base_issue["title"], base_issue["number"])
-    for index, (result_issue, result_score) in enumerate(top_10):
-        print(
-            f"  {index+1}.",
-            result_issue["title"],
-            result_issue["number"],
-            " - Score:",
-            result_score,
-        )
+    return [run_nlp_on_issue(issue) for issue in issues]
+
+
+def print_similarity(
+    bd: Tuple[dict[str, Any], Doc], docs: list[Tuple[dict[str, Any], Doc]]
+) -> str:
+    base_issue, base_doc = bd
+
+    top_3 = get_most_similar(docs, base_doc)[:3]
+    intro = f"Most similar to {base_issue['title']} {base_issue['number']}"
+    output = "\n".join(
+        [
+            f"  {index+1}. {result_issue['title']} #{result_issue['number']} - Score: {round(result_score, 3)}"
+            for index, (result_issue, result_score) in enumerate(top_3)
+        ]
+    )
+
+    print(intro, output)
+    return intro + "\n" + output
