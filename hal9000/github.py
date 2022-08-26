@@ -1,11 +1,12 @@
 import os
 import json
-import requests
 
 from pprint import pprint
 from time import sleep
 from typing import Any, Callable, TypedDict
 from requests.auth import HTTPBasicAuth
+
+import requests
 
 
 class ApiInfo(TypedDict):

@@ -49,18 +49,19 @@ def run_nlp_on_list(issues: list[Any]) -> Any:
 
 
 def print_similarity(
-    bd: Tuple[dict[str, Any], Doc], docs: list[Tuple[dict[str, Any], Doc]]
+    base: Tuple[dict[str, Any], Doc], docs: list[Tuple[dict[str, Any], Doc]]
 ) -> str:
-    base_issue, base_doc = bd
+    base_issue, base_doc = base
 
     top_3 = get_most_similar(docs, base_doc)[:3]
-    intro = f"### These are the most similar issues to \"{base_issue['title']}\":"
+    intro = f"### These are the most similar issues to \"{base_issue['title']}\":\n"
     output = "\n".join(
         [
-            f"  - {['🥇','🥈','🥉'][index]} #{result_issue['number']} (Similarity: {round(result_score, 3)*100}%)"
-            for index, (result_issue, result_score) in enumerate(top_3)
+            f"  - {['🥇','🥈','🥉'][index]} #{issue['number']} (Similarity: {round(score * 100, 1)}%)"
+            for index, (issue, score) in enumerate(top_3)
         ]
     )
+    outro = "🤖 💬 I hope this was helpful. BEEP BOOP."
 
-    print(intro, output, "🤖 💬 I hope this was helpful. BEEP BOOP.")
-    return intro + "\n" + output
+    result = intro + "\n" + output + "\n\n" + outro
+    return result
