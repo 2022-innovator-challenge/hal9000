@@ -36,13 +36,13 @@ def on_issue_comment(data: Any):
             data["issue"]["number"],
         )
         issue["comments"] = []
-        bd = run_nlp_on_issue(issue)
+        base_doc = run_nlp_on_issue(issue)
         post_comment(
             get_api_type(data["repository"]["url"]),
             data["repository"]["owner"]["login"],
             data["repository"]["name"],
             data["issue"]["number"],
-            print_similarity(bd, docs),
+            print_similarity(base_doc, docs),
         )
 
 

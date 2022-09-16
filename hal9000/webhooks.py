@@ -7,7 +7,7 @@ from typing import Any, Callable, DefaultDict, Optional
 from flask import Flask, abort, request
 
 
-class Webhook(object):
+class Webhook:
     """
     Construct a webhook on the given :code:`app`.
 

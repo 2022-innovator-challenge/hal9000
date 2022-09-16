@@ -9,7 +9,10 @@ hal9000 = "hal9000.run:main"
 
 [tool.poetry.dependencies]
 python = "^3.10"
-spacy = {extras = ["apple"], version = "^3.3.0"}
+spacy = [
+  {extras = ["apple"], version = "^3.3.0", markers = "platform_system == 'Darwin' and platform_machine == 'arm64'"},
+  {version = "^3.3.0"}
+]
 requests = "^2.27.1"
 beautifulsoup4 = "^4.11.1"
 Markdown = "^3.3.7"

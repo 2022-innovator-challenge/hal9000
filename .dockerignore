@@ -1,0 +1,8 @@
+.venv
+.git
+.cache
+.envrc
+comments.json
+issues.json
+__pycache__
+code_search*.json
