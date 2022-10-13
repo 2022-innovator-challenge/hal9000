@@ -13,4 +13,4 @@ RUN poetry run python -m spacy download en_core_web_lg
 COPY . /project
 
 EXPOSE 3000
-CMD ["poetry", "run", "flask", "--app=hal9000", "run", "--port=3000"]
+CMD poetry run gunicorn -w=2 -b=0.0.0.0:3000 --timeout=0 -k=gevent 'hal9000.routes:app'

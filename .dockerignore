@@ -6,3 +6,4 @@ comments.json
 issues.json
 __pycache__
 code_search*.json
+k8s

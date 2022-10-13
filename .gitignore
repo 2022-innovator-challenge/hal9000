@@ -5,3 +5,4 @@ issues.json
 comments.json
 code_search*.json
 /vectors
+/k8s
